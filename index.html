@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mejora Fotos Pro - Quita Rayas</title>
+<script async src="https://docs.opencv.org/4.8.0/opencv.js"></script>
+<style>
+ body{font-family: sans-serif; text-align:center; padding:20px; background:#111; color:white}
+ #canvas{max-width:100%; margin-top:20px; border-radius:10px}
+ button{padding:15px 25px; font-size:18px; background:#00ff88; border:none; border-radius:10px; margin-top:20px}
+</style>
+</head>
+<body>
+<h2>✨ Mejora Fotos Pro - Quita Rayas</h2>
+<input type="file" id="file" accept="image/*">
+<br>
+<canvas id="canvas"></canvas>
+<br>
+<button onclick="restaurar()">Restaurar Foto</button>
+<button onclick="descargar()">Descargar HD</button>
+
+<script>
+let imgMat;
+document.getElementById('file').onchange = function(e){
+  let img = new Image();
+  img.onload = function(){
+    let canvas = document.getElementById('canvas');
+    canvas.width = img.width; canvas.height = img.height;
+    let ctx = canvas.getContext('2d');
+    ctx.drawImage(img,0,0);
+    imgMat = cv.imread(canvas);
+  }
+  img.src = URL.createObjectURL(e.target.files[0]);
+}
+function restaurar(){
+  let gray = new cv.Mat(); cv.cvtColor(imgMat, gray, cv.COLOR_RGBA2GRAY);
+  let mask = new cv.Mat(); cv.threshold(gray, mask, 200, 255, cv.THRESH_BINARY);
+  let kernel = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(3,3));
+  cv.dilate(mask, mask, kernel);
+  cv.inpaint(imgMat, mask, imgMat, 5, cv.INPAINT_TELEA);
+  cv.imshow('canvas', imgMat);
+}
+function descargar(){
+  let canvas = document.getElementById('canvas');
+  let a = document.createElement('a'); a.download='foto-restaurada.png';
+  a.href = canvas.toDataURL(); a.click();
+}
+</script>
+</body>
+</html>
