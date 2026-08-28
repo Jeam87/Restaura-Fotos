@@ -1,6 +1,8 @@
-from flask import Flask, request, render_template_string
-import cv2, numpy as np, base64
+from flask import Flask
 app = Flask(__name__)
+@app.route('/')
+def home():
+    return 'Hola Jacona, ya quedo' 
 
 HTML = """
 <!DOCTYPE html>
