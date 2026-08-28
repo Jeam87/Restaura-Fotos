@@ -1,4 +1,3 @@
-return "Listo, ya jala - ahora pega el codigo completo"
 from flask import Flask, request, render_template_string
 import cv2, numpy as np, base64
 app = Flask(__name__)
