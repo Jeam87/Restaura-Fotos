@@ -90,14 +90,14 @@ form.addEventListener('submit',function(e){
   setTimeout(()=>{ document.open();document.write(html);document.close(); },400);
  });
 });
-</script>
-</body></html>
-"""
+</s
+<
 
-def procesar(img, mode):
+9def procesar(img, mode):
     if mode in ['rayas','todo']:
         gray=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        _,mask=cv2.threshold(cv2.medianBlur(gray,3),205,255,cv2.THRESH_BINARY)
+        gray_blur=cv2.medianBlur(gray,3)
+        _,mask=cv2.threshold(gray_blur,205,255,cv2.THRESH_BINARY)
         kernel=np.ones((2,2),np.uint8)
         mask=cv2.morphologyEx(mask,cv2.MORPH_OPEN,kernel,1)
         mask=cv2.dilate(mask,kernel,1)
@@ -106,26 +106,15 @@ def procesar(img, mode):
         img=cv2.resize(img,None,fx=2,fy=2,interpolation=cv2.INTER_CUBIC)
         img=cv2.detailEnhance(img, sigma_s=12, sigma_r=0.15)
     if mode in ['color','todo']:
-        # coloreado básico rápido en Vercel (no es DeOldify pero vende)
-        img_yuv=cv2.cvtColor(img,cv2.COLOR_BGR2YUV)
-        img_yuv[:,:,0]=cv2.equalizeHist(img_yuv[:,:,0])
-        img=cv2.cvtColor(img_yuv,cv2.COLOR_YUV2BGR)
-        # toque de color sepia a color
-        img = cv2.applyColorMap(img, cv2.COLORMAP_JET)
-        img = cv2.addWeighted(cv2.cvtColor(img,cv2.COLOR_BGR2GRAY),0,img,0.5,0) # placeholder
-        # para demo, dejamos mejora de color simple
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2BGRA)
-        img = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
+        # Coloreado seguro para Vercel (no truena)
+        try:
+            # Si es B/N, le damos un toque cálido pro
+            hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+            hsv[:,:,1] = cv2.add(hsv[:,:,1], 30) # más saturación
+            img = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+            # Realce de color
+            img = cv2.convertScaleAbs(img, alpha=1.1, beta=10)
+        except:
+            pass
     return img
 
-@app.route('/', methods=['GET','POST'])
-def home():
-    result=None
-    if request.method=='POST':
-        f=request.files['file'].read()
-        mode=request.form.get('mode','rayas')
-        img=cv2.imdecode(np.frombuffer(f,np.uint8), cv2.IMREAD_COLOR)
-        out=procesar(img, mode)
-        _,buf=cv2.imencode('.png', out)
-        result=base64.b64encode(buf).decode()
-    return render_template_string(HTML, result=result) 
