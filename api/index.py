@@ -9,6 +9,7 @@ HTML = """
 <html><head><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Restaura Fotos Pro</title>
 <style>
+
 body{background:#111;color:#fff;font-family:sans-serif;text-align:center;padding:15px}
 .card{background:#222;padding:20px;border-radius:18px;max-width:500px;margin:auto}
 button{background:#00ff88;padding:14px;width:100%;border:none;border-radius:12px;font-weight:bold;margin-top:12px;color:#000;font-size:16px}
@@ -17,6 +18,7 @@ button.sec{background:#333;color:#fff}
 #bar{height:28px;width:0%;background:#00ff88;border-radius:8px;transition:width 0.3s;color:#000;font-weight:bold;line-height:28px}
 img{max-width:100%;margin-top:12px;border-radius:12px}
 </style>
+
 </head><body>
 <div class="card">
 <h2>Restaura Fotos Pro</h2>
@@ -29,6 +31,7 @@ img{max-width:100%;margin-top:12px;border-radius:12px}
 <option value="color">3. Colorear B/N -> Color</option>
 <option value="todo">4. TODO Pro (Rayas+HD+Color)</option>
 </select>
+
 <button type="submit" id="btn">RESTAURAR AHORA</button>
 </form>
 <div id="loader"><div id="bar">0%</div><div id="txt" style="margin-top:6px;font-size:14px">Preparando...</div></div>
