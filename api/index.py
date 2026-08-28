@@ -2,7 +2,8 @@ from flask import Flask
 app = Flask(__name__)
 @app.route('/', methods=['GET','POST'])
 def home():
-    return "Listo, ya jala - ahora pega el codigo completo"
+    
+return "Listo, ya jala - ahora pega el codigo completo"
 from flask import Flask, request, render_template_string
 import cv2, numpy as np, base64
 app = Flask(__name__)
