@@ -1,7 +1,6 @@
 from flask import Flask, request, render_template_string
 from PIL import Image
 import base64, io
-
 app = Flask(__name__)
 
 HTML = """
