@@ -1,55 +1,18 @@
 "use client"
 import { useState } from "react"
-
-export default function Home() {
-  const [orig, setOrig] = useState("")
-  const [rest, setRest] = useState("")
-  const [loading, setLoading] = useState(false)
-
-  const onFile = (e: any) => {
-    const file = e.target.files[0]
-    if (!file) return
-    setOrig(URL.createObjectURL(file))
-    setRest("")
-  }
-
-  const restaurar = () => {
-    if (!orig) return
-    setLoading(true)
-    const img = new window.Image()
-    img.src = orig
-    img.onload = () => {
-      const canvas = document.createElement("canvas")
-      canvas.width = img.width
-      canvas.height = img.height
-      const ctx = canvas.getContext("2d")!
-      ctx.filter = "contrast(1.25) brightness(1.1) saturate(1.4)"
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
-      setRest(canvas.toDataURL("image/jpeg", 0.95))
-      setLoading(false)
-    }
-  }
-
-  return (
-    <div style={{background:"#000",color:"#fff",minHeight:"100vh",padding:20,textAlign:"center"}}>
-      <h1 style={{color:"#22c55e"}}>Restaura Fotos AUTOMATICO</h1>
-      <input type="file" accept="image/*" onChange={onFile} style={{margin:20}} />
-      {orig && (
-        <div>
-          <img src={orig} style={{maxWidth:300,margin:"10px auto",display:"block"}} alt="orig"/>
-          <button onClick={restaurar} style={{background:"#22c55e",color:"#000",padding:"14px 28px",borderRadius:30,border:"none",fontWeight:"bold"}}>
-            {loading? "Restaurando..." : "✨ RESTAURAR AUTOMATICO"}
-          </button>
-        </div>
-      )}
-      {rest && (
-        <div style={{marginTop:25}}>
-          <h3>Resultado</h3>
-          <img src={rest} style={{maxWidth:300,border:"3px solid #22c55e"}} alt="rest"/>
-          <br/>
-          <a href={rest} download="restaurada.jpg" style={{display:"inline-block",marginTop:12,background:"#fff",color:"#000",padding:"10px 20px",borderRadius:20,textDecoration:"none"}}>Descargar</a>
-        </div>
-      )}
-    </div>
-  )
+export default function Home(){
+  const [o,setO]=useState(""); const [r,setR]=useState(""); const [c,setC]=useState(false)
+  const load=(e:any)=>{ const f=e.target.files[0]; if(f){ setO(URL.createObjectURL(f)); setR("") } }
+  const go=()=>{ if(!o)return; setC(true); const i=new window.Image(); i.src=o; i.onload=()=>{
+    const ca=document.createElement("canvas"); ca.width=i.width; ca.height=i.height;
+    const x=ca.getContext("2d")!; x.filter="contrast(1.3) brightness(1.1) saturate(1.6)"; x.drawImage(i,0,0);
+    setR(ca.toDataURL("image/jpeg",0.95)); setC(false)
+  }}
+  return(<div style={{background:"#000",color:"#fff",minHeight:"100vh",padding:20,textAlign:"center"}}>
+    <h1 style={{color:"#22c55e"}}>Restaura AUTOMATICO</h1><p>Sube la foto y restaura sola, sin pintar</p>
+    <input type="file" accept="image/*" onChange={load} style={{margin:20}}/>
+    {o&&<><img src={o} style={{maxWidth:"90%",maxHeight:300,margin:"10px auto",display:"block"}}/>
+    <button onClick={go} style={{background:"#22c55e",color:"#000",padding:"16px 32px",borderRadius:30,border:"none",fontWeight:"bold",fontSize:18}}>{c?"Restaurando...":"✨ RESTAURAR AUTOMATICO"}</button></>}
+    {r&&<div style={{marginTop:30}}><h3 style={{color:"#22c55e"}}>Foto restaurada</h3><img src={r} style={{maxWidth:"90%",border:"3px solid #22c55e"}}/><br/><a href={r} download="restaurada.jpg" style={{display:"inline-block",marginTop:15,background:"#fff",color:"#000",padding:12,borderRadius:20,textDecoration:"none",fontWeight:"bold"}}>DESCARGAR</a></div>}
+  </div>)
 }
