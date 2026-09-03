@@ -4,46 +4,37 @@ export async function POST(req) {
     const file = form.get("image");
     if (!file) return new Response(JSON.stringify({error:"No imagen"}), {status:400});
 
-    const prompt = form.get("prompt") || "restore old photo, fill missing torn white part, remove cracks and scratches, photorealistic, high detail, keep faces intact, sharp";
-    const bytes = await file.arrayBuffer();
+    const prompt = form.get("prompt") || "restore old photo, fill missing torn parts, remove cracks, photorealistic";
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const base64 = buffer.toString('base64');
 
-    const account = "c8189d023817f7559eff989ecdb0fbc8";
+    const account = process.env.CLOUDFLARE_ACCOUNT_ID || "c8189d023817f7559eff989ecdb0fbc8";
     const token = process.env.CLOUDFLARE_API_TOKEN;
 
-    // Cloudflare quiere multipart, no json
-    const cfForm = new FormData();
-    cfForm.append("prompt", prompt);
-    cfForm.append("image", new Blob([bytes], {type: "image/png"}), "photo.png");
-    // opcional para inpainting, si no pones mask rellena todo lo roto
-    cfForm.append("num_steps", "20");
-
-    const r = await fetch(`https://api.cloudflare.com/client/v4/accounts/${account}/ai/run/@cf/runwayml/stable-diffusion-v1-5-inpainting`, {
+    const cfRes = await fetch(`https://api.cloudflare.com/client/v4/accounts/${account}/ai/run/@cf/runwayml/stable-diffusion-v1-5-inpainting`, {
       method: "POST",
-      headers: { "Authorization": `Bearer ${token}` },
-      body: cfForm
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        prompt: prompt,
+        image: base64,
+        num_steps: 20,
+        strength: 0.8
+      })
     });
 
-    const text = await r.text();
-    // Si devuelve imagen, es binario, si devuelve error es texto json
-    if(!r.ok){
-      return new Response(JSON.stringify({error:text}), {status:500, headers:{"Content-Type":"application/json"}});
+    if (!cfRes.ok) {
+      const txt = await cfRes.text();
+      return new Response(JSON.stringify({error: txt}), {status: 500, headers:{"Content-Type":"application/json"}});
     }
 
-    // Cloudflare devuelve imagen directa
-    try {
-      const json = JSON.parse(text);
-      if(json.result?.image){
-        const imgBuffer = Buffer.from(json.result.image, 'base64');
-        return new Response(imgBuffer, {headers:{"Content-Type":"image/png"}});
-      }
-    } catch(e) {
-      // Si no es JSON, es la imagen ya
-      return new Response(Buffer.from(text, 'binary'), {headers:{"Content-Type":"image/png"}});
-    }
+    // Cloudflare devuelve la imagen directo
+    const imgBlob = await cfRes.blob();
+    return new Response(imgBlob, {headers:{"Content-Type":"image/png"}});
 
-    return new Response(text, {headers:{"Content-Type":"image/png"}});
-
-  } catch(e){
+  } catch(e) {
     return new Response(JSON.stringify({error:e.message}), {status:500});
   }
 }
