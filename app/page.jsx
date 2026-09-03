@@ -1,93 +1,99 @@
 "use client";
 import { useState } from "react";
 
-export default function Page() {
-  const [original, setOriginal] = useState(null);
-  const [restored, setRestored] = useState(null);
-  const [status, setStatus] = useState("");
-  const [b64, setB64] = useState("");
+export default function Home() {
+  const [file, setFile] = useState(null);
+  const [originalUrl, setOriginalUrl] = useState(null);
+  const [restoredUrl, setRestoredUrl] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [modo, setModo] = useState("Color"); // B/N | Color | Original
+  const [brillo, setBrillo] = useState(100);
+  const [color, setColor] = useState(100);
 
-  const onFile = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setOriginal(URL.createObjectURL(file));
-    setRestored(null);
-    setStatus("");
-    const reader = new FileReader();
-    reader.onload = () => setB64(reader.result);
-    reader.readAsDataURL(file);
-  };
+  function onFileChange(e){
+    const f = e.target.files?.[0];
+    if(!f) return;
+    setFile(f);
+    setOriginalUrl(URL.createObjectURL(f));
+    setRestoredUrl(null);
+    setError("");
+  }
 
-  const restore = async () => {
-    if (!b64) { setStatus("Sube una foto primero"); return; }
-    try {
-      setStatus("Restaurando con DeepAI (quitando grietas y rellenando)... 15s");
+  async function restaurar(){
+    if(!file){ setError("Primero selecciona una foto"); return; }
+    setLoading(true);
+    setError("");
+    try{
+      const fd = new FormData();
+      fd.append("image", file);
+      let prompt = "restore old photo, fill missing torn white part, remove cracks, scratches, creases, photorealistic, high detail, keep faces intact, sharp";
+      if(modo === "B/N") prompt += ", black and white";
+      if(modo === "Color") prompt += ", colorized, vibrant colors";
 
-      const res = await fetch("/api/restore", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          image: b64,
-          prompt: "Quita las grietas, repara el daño y rellena el espacio que falta de la foto, restauración profesional, alta calidad"
-        }),
-      });
+      fd.append("prompt", prompt);
 
-      const j = await res.json();
-
-      if (j.error) { setStatus("Error: " + JSON.stringify(j.error).slice(0,300)); return; }
-
-      const out = j.output || j.output_url;
-      if (out) {
-        setRestored(out);
-        setStatus("¡Listo! Foto restaurada como en el chat");
-      } else {
-        setStatus("No regresó imagen: " + JSON.stringify(j).slice(0,300));
+      const res = await fetch("/api/restore", { method: "POST", body: fd });
+      if(!res.ok){
+        const j = await res.json().catch(()=>({error:"Error servidor"}));
+        throw new Error(j.error || "Error");
       }
-    } catch (err) {
-      setStatus("Error: " + err.message);
+      const blob = await res.blob();
+      setRestoredUrl(URL.createObjectURL(blob));
+    }catch(err){
+      setError(err.message);
+    }finally{
+      setLoading(false);
     }
+  }
+
+  const filterStyle = {
+    filter: `brightness(${brillo}%) saturate(${modo === "B/N"? 0 : color}%) ${modo === "Original"? "grayscale(0)" : ""}`,
   };
 
   return (
-    <main style={{ background: "#000", color: "#fff", minHeight: "100vh", padding: 20, textAlign: "center", fontFamily: "sans-serif" }}>
-      <h1 style={{ color: "#22c55e", fontSize: 26, fontWeight: 900, marginBottom: 8 }}>RESTAURA AUTOMATICO PRO IA</h1>
-      <p style={{ color: "#aaa", fontSize: 14, marginBottom: 20 }}>Quita grietas y rellena pedazos rotos - Gratis con DeepAI</p>
+    <div style={{background:"#000", minHeight:"100vh", color:"#fff", padding:16, fontFamily:"system-ui"}}>
+      <h1 style={{textAlign:"center", fontSize:18, marginBottom:12}}>Quita grietas y rellena pedazos rotos - Gratis con Cloudflare</h1>
 
-      <input type="file" accept="image/*" onChange={onFile} style={{ marginBottom: 20, color: "#fff" }} />
+      <div style={{textAlign:"center", marginBottom:16}}>
+        <input type="file" accept="image/*" onChange={onFileChange} />
+      </div>
 
-      {original && (
-        <div style={{ maxWidth: 750, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 15 }}>
-          <div>
-            <p style={{ color: "#888", fontSize: 12, marginBottom: 6 }}>ORIGINAL</p>
-            <img src={original} style={{ width: "100%", borderRadius: 12, border: "1px solid #333" }} />
-          </div>
-          <div>
-            <p style={{ color: "#22c55e", fontSize: 12, marginBottom: 6 }}>RESTAURADA</p>
-            {restored? (
-              <>
-                <img src={restored} style={{ width: "100%", borderRadius: 12, border: "2px solid #22c55e" }} />
-                <a href={restored} target="_blank" download style={{ display: "inline-block", marginTop: 10, background: "#22c55e", color: "#000", padding: "10px 20px", borderRadius: 99, fontWeight: 800, textDecoration: "none" }}>
-                  ⬇️ DESCARGAR HD
-                </a>
-              </>
-            ) : (
-              <div style={{ height: 220, border: "1px dashed #333", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", color: "#555" }}>
-                Aquí aparecerá sin grietas
-              </div>
-            )}
+      <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:12}}>
+        <div>
+          <p style={{textAlign:"center", color:"#888"}}>ORIGINAL</p>
+          <div style={{border:"1px dashed #444", minHeight:260, display:"flex", alignItems:"center", justifyContent:"center", background:"#111", borderRadius:12, overflow:"hidden"}}>
+            {originalUrl? <img src={originalUrl} style={{width:"100%",...filterStyle}} /> : <span style={{color:"#555"}}>Selecciona foto</span>}
           </div>
         </div>
-      )}
+        <div>
+          <p style={{textAlign:"center", color:"#2f6"}}>RESTAURADA</p>
+          <div style={{border:"1px dashed #444", minHeight:260, display:"flex", alignItems:"center", justifyContent:"center", background:"#111", borderRadius:12, overflow:"hidden"}}>
+            {restoredUrl? <img src={restoredUrl} style={{width:"100%",...filterStyle}} /> : <span style={{color:"#555", textAlign:"center"}}>Aquí aparecerá sin<br/>grietas</span>}
+          </div>
+        </div>
+      </div>
 
-      {original &&!restored && (
-        <button onClick={restore} style={{ marginTop: 20, background: "#22c55e", color: "#000", padding: "16px 32px", borderRadius: 99, border: "none", fontWeight: 900, fontSize: 16, cursor: "pointer" }}>
-          ✨ RESTAURAR Y RELLENAR
-        </button>
-      )}
+      <div style={{marginTop:16, display:"flex", gap:8, justifyContent:"center"}}>
+        <button onClick={()=>setModo("B/N")} style={{padding:"6px 12px", borderRadius:8, background: modo==="B/N"?"#fff":"#222", color: modo==="B/N"?"#000":"#fff"}}>B/N</button>
+        <button onClick={()=>setModo("Color")} style={{padding:"6px 12px", borderRadius:8, background: modo==="Color"?"#fff":"#222", color: modo==="Color"?"#000":"#fff"}}>Color</button>
+        <button onClick={()=>setModo("Original")} style={{padding:"6px 12px", borderRadius:8, background: modo==="Original"?"#fff":"#222", color: modo==="Original"?"#000":"#fff"}}>Original</button>
+      </div>
 
-      {status && <p style={{ marginTop: 15, color: status.includes("Error")? "#ef4444" : "#22c55e", fontWeight: 600, maxWidth: 600, margin: "15px auto 0" }}>{status}</p>}
+      <div style={{marginTop:12, maxWidth:400, margin:"12px auto"}}>
+        <label>Brillo: {brillo}%</label>
+        <input type="range" min="50" max="150" value={brillo} onChange={e=>setBrillo(e.target.value)} style={{width:"100%"}} />
+        <label>Color: {color}%</label>
+        <input type="range" min="0" max="200" value={color} onChange={e=>setColor(e.target.value)} style={{width:"100%"}} />
+      </div>
 
-      <p style={{marginTop:40, color:"#555", fontSize:11}}>Motor: DeepAI (mismo que usaste en tu captura) - Gratis</p>
-    </main>
+      <button onClick={restaurar} disabled={loading} style={{display:"block", margin:"16px auto", background:"#22c55e", color:"#000", fontWeight:"bold", padding:"14px 28px", borderRadius:999, border:"none", width:"90%", maxWidth:400, fontSize:18}}>
+        {loading? "Restaurando..." : "✨ RESTAURAR Y RELLENAR"}
+      </button>
+
+      {error && <p style={{color:"#f55", textAlign:"center", wordBreak:"break-word"}}>Error: {error}</p>}
+      {restoredUrl && <a href={restoredUrl} download="restaurada.png" style={{display:"block", textAlign:"center", color:"#2f6", marginTop:12}}>Descargar foto restaurada</a>}
+      <p style={{textAlign:"center", color:"#444", marginTop:20, fontSize:12}}>Motor: Cloudflare Workers AI (tuyo, sin límites de DeepAI)</p>
+    </div>
   );
 }
