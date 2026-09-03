@@ -1,19 +1,24 @@
 "use client";
 import { useState } from "react";
 export default function Page(){
- const [a,setA]=useState("");
- const [b,setB]=useState("");
- return <main style={{background:"#000",color:"#fff",minHeight:"100vh",padding:24,textAlign:"center"}}>
-  <h1 style={{color:"#22c55e"}}>RESTAURA AUTOMATICO</h1>
-  <input type="file" accept="image/*" onChange={e=>{const f=e.target.files[0]; if(f)setA(URL.createObjectURL(f))}}/>
-  {a&&<div><img src={a} style={{maxWidth:320,margin:"20px auto",display:"block"}}/>
-  <button onClick={()=>{
-   const im=new Image(); im.src=a; im.onload=()=>{
-    const c=document.createElement("canvas"); c.width=im.width; c.height=im.height;
-    const x=c.getContext("2d"); x.filter="contrast(1.3) brightness(1.1) saturate(1.4)"; x.drawImage(im,0,0);
-    setB(c.toDataURL("image/jpeg",0.9));
-   };
-  }} style={{background:"#22c55e",color:"#000",padding:"14px 28px",borderRadius:30,border:"none",fontWeight:"bold"}}>✨ RESTAURAR</button></div>}
-  {b&&<div style={{marginTop:24}}><img src={b} style={{maxWidth:320,border:"3px solid #22c55e"}}/><br/><a href={b} download="restaurada.jpg" style={{color:"#22c55e"}}>Descargar</a></div>}
+ const [o,setO]=useState(null); const [r,setR]=useState(null); const [load,setLoad]=useState(false);
+ const go=async()=>{
+  setLoad(true);
+  const reader=new FileReader();
+  reader.onload=async()=>{
+    const res=await fetch("/api/restore",{method:"POST",body:JSON.stringify({image:reader.result})});
+    const data=await res.json();
+    setR(data.url); setLoad(false);
+  };
+  const fileInput=document.getElementById("f").files[0];
+  reader.readAsDataURL(fileInput);
+ };
+ return <main style={{background:"#000",color:"#fff",minHeight:"100vh",padding:20,textAlign:"center",fontFamily:"sans-serif"}}>
+  <h1 style={{color:"#22c55e",fontSize:36}}>RESTAURA<br/>AUTOMATICO PRO IA</h1>
+  <p style={{opacity:.6}}>IA real quita rayones y colorea</p>
+  <input id="f" type="file" accept="image/*" onChange={e=>{if(e.target.files[0]){setO(URL.createObjectURL(e.target.files[0])); setR(null)}}} style={{margin:20}}/>
+  {o&&<><img src={o} style={{maxWidth:320,margin:"auto",borderRadius:10,display:"block"}}/>
+  <button onClick={go} disabled={load} style={{marginTop:15,background:"#22c55e",color:"#000",padding:"16px 32px",borderRadius:99,border:"none",fontWeight:900}}>{load?"IA restaurando... 20s":"✨ RESTAURAR CON IA REAL"}</button></>}
+  {r&&<div style={{marginTop:20}}><h3 style={{color:"#22c55e"}}>¡Sin rayones!</h3><img src={r} style={{maxWidth:360,border:"3px solid #22c55e",borderRadius:10}}/><br/><a href={r} target="_blank" style={{background:"#fff",color:"#000",padding:"12px 24px",borderRadius:99,display:"inline-block",marginTop:12,textDecoration:"none",fontWeight:"bold"}}>⬇️ Descargar HD</a></div>}
  </main>
 }
