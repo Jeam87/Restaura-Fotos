@@ -8,18 +8,16 @@ export async function POST(req){
     "Content-Type":"application/json"
    },
    body:JSON.stringify({
-    version:"cc4956dd26fa5a7185d5660cc9100fab1b8070a1d1654a8bb5eb6d443b020bb2",
+    version:"c75db81db6cbd809d93cc3b7e7a088a351a3349c9fa02b6d393e35e0d51ba799",
     input:{
       image,
-      codeformer_fidelity:0.5,
-      background_enhance:true,
-      face_upsample:true,
-      upscale:2
+      with_scratch:true,
+      HR:false
     }
    })
   });
   const j = await r.json();
-  if(j.error || j.detail) return Response.json({error: j.error || j.detail, raw:j},{status:500});
+  if(j.detail || j.error) return Response.json({error:j.detail||j.error, raw:j},{status:500});
   return Response.json({id:j.id});
  }catch(e){ return Response.json({error:e.message},{status:500}); }
 }
@@ -29,4 +27,4 @@ export async function GET(req){
   headers:{Authorization:`Token ${process.env.REPLICATE_API_TOKEN}`}
  });
  return Response.json(await r.json());
-}
+} 
