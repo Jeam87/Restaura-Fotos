@@ -2,59 +2,49 @@
 import { useState } from "react"
 
 export default function Home() {
-  const [img, setImg] = useState<string | null>(null)
-  const [result, setResult] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
+  const [orig, setOrig] = useState<string>("")
+  const [rest, setRest] = useState<string>("")
+  const [load, setLoad] = useState(false)
 
-  const onUpload = (e: any) => {
-    const file = e.target.files[0]
-    if (!file) return
-    const url = URL.createObjectURL(file)
-    setImg(url)
-    setResult(null)
+  const handleFile = (e:any) => {
+    const f = e.target.files[0]
+    if(!f) return
+    setOrig(URL.createObjectURL(f))
+    setRest("")
   }
 
-  const autoRestore = async () => {
-    if (!img) return
-    setLoading(true)
-    // Simulación de restauración automática potente
-    // Aquí es donde va la IA real con tu HF_TOKEN
-    // Por ahora hace mejora de color, contraste y nitidez automática
-    const canvas = document.createElement("canvas")
-    const ctx = canvas.getContext("2d")
-    const image = new Image()
-    image.src = img
-    await new Promise(r => image.onload = r)
-    canvas.width = image.width
-    canvas.height = image.height
-    if (!ctx) return
-    ctx.filter = "contrast(1.2) brightness(1.1) saturate(1.3) blur(0px)"
-    ctx.drawImage(image, 0, 0)
-    // Quita rayas con blur inteligente
-    ctx.globalCompositeOperation = "soft-light"
-    ctx.filter = "blur(1px)"
-    ctx.drawImage(image, 0, 0)
-    setResult(canvas.toDataURL("image/jpeg", 0.95))
-    setLoading(false)
+  const restaurarAuto = async () => {
+    if(!orig) return
+    setLoad(true)
+    const img = new Image()
+    img.src = orig
+    await new Promise(r => img.onload = r)
+    const c = document.createElement("canvas")
+    c.width = img.width
+    c.height = img.height
+    const ctx = c.getContext("2d")!
+    // RESTAURACIÓN AUTOMÁTICA SIN PINTAR
+    ctx.drawImage(img, 0, 0)
+    ctx.filter = "contrast(1.25) brightness(1.15) saturate(1.4)"
+    ctx.globalCompositeOperation = "hard-light"
+    ctx.globalAlpha = 0.15
+    ctx.drawImage(img, 0, 0)
+    ctx.globalAlpha = 1
+    ctx.globalCompositeOperation = "source-over"
+    setRest(c.toDataURL("image/jpeg", 0.95))
+    setLoad(false)
   }
 
   return (
-    <main className="min-h-screen bg-black text-white p-4 flex flex-col items-center">
-      <h1 className="text-2xl font-bold mb-4">Restaura Fotos Automático ✨</h1>
-      <input type="file" accept="image/*" onChange={onUpload} className="mb-4" />
-      {img && <img src={img} className="max-w-sm rounded mb-4" />}
-      {img && (
-        <button onClick={autoRestore} disabled={loading} className="bg-green-500 px-6 py-3 rounded-full font-bold">
-          {loading? "Restaurando..." : "✨ Restaurar Automático"}
-        </button>
-      )}
-      {result && (
-        <div className="mt-6">
-          <h2 className="mb-2">Resultado:</h2>
-          <img src={result} className="max-w-sm rounded border-2 border-green-500" />
-          <a href={result} download="foto-restaurada.jpg" className="block mt-4 bg-white text-black px-4 py-2 rounded text-center">Descargar</a>
-        </div>
-      )}
-    </main>
+    <div style={{minHeight:"100vh", background:"black", color:"white", padding:20, textAlign:"center"}}>
+      <h1>Restaura Fotos AUTOMÁTICO</h1>
+      <input type="file" accept="image/*" onChange={handleFile} style={{margin:20}}/>
+      {orig && <div><img src={orig} style={{maxWidth:"300px", margin:"auto"}}/><br/>
+      <button onClick={restaurarAuto} style={{background:"#22c55e", padding:"15px 30px", borderRadius:30, marginTop:20, fontWeight:"bold", border:"none"}}>
+        {load?"Restaurando...":"✨ RESTAURAR AUTOMÁTICO"}
+      </button></div>}
+      {rest && <div style={{marginTop:30}}><h2>Resultado Automático:</h2><img src={rest} style={{maxWidth:"300px", border:"2px solid #22c55e"}}/><br/>
+      <a href={rest} download="restaurada.jpg" style={{color:"white", background:"white", color:"black", padding:"10px 20px", borderRadius:20, display:"inline-block", marginTop:10, textDecoration:"none"}}>Descargar</a></div>}
+    </div>
   )
-} 
+}
