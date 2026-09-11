@@ -7,7 +7,7 @@ export default function Home() {
   const [restoredUrl, setRestoredUrl] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [modo, setModo] = useState("Color"); // B/N | Color | Original
+  const [modo, setModo] = useState("Color");
   const [brillo, setBrillo] = useState(100);
   const [color, setColor] = useState(100);
 
@@ -31,21 +31,21 @@ export default function Home() {
       const fd = new FormData();
       fd.append("image", file);
       
-      // PROMPT ULTRA PODEROSO: Optimizado para restauraciones extremas, grietas profundas y manchas
-      let prompt = "masterpiece, ultra high quality, hyper-realistic restoration, look like new, " +
-                   "completely repair and fill severely torn white parts, reconstruct missing pieces, " +
-                   "flawlessly remove deep scratches, heavy cracks, dark stains, dust, and water damage, " +
-                   "smooth textures, bring back original details, keep faces fully intact and sharp, clear eyes";
+      // PROMPT ULTRA AVANZADO: Instrucciones de grado profesional para eliminar manchas, rayas marcadas y reconstruir papel roto
+      let prompt = "professional hyper-realistic photo restoration, high-end digital cleanup, " +
+                   "completely erase deep scratches, sharp cracks, heavy creases, large dark stains, and mold spots, " +
+                   "seamlessly fill and reconstruct missing paper fragments and torn edges, smooth aged textures, " +
+                   "enhance faded details, keep original facial structures perfectly intact, clear eyes, high resolution, sharp focus";
       
-      if (modo === "B/N") prompt += ", clean black and white photograph, sharp monochrome tone";
-      if (modo === "Color") prompt += ", professionally colorized, vibrant but natural colors, realistic skin tones";
+      if (modo === "B/N") prompt += ", clean black and white dynamic monochrome portrait";
+      if (modo === "Color") prompt += ", vivid natural colorization, realistic skin tones, authentic color balancing";
 
       fd.append("prompt", prompt);
 
       const res = await fetch("/api/restore", { method: "POST", body: fd });
       if (!res.ok) {
-        const j = await res.json().catch(() => ({ error: "Error servidor" }));
-        throw new Error(j.error || "Error en el servidor de restauración");
+        const j = await res.json().catch(() => ({ error: "Error de conexión con la IA" }));
+        throw new Error(j.error || "Error");
       }
       const blob = await res.blob();
       setRestoredUrl(URL.createObjectURL(blob));
@@ -56,7 +56,7 @@ export default function Home() {
     }
   }
 
-  // CORRECCIÓN: El estilo de filtro visual de la interfaz ahora solo se calcula para el resultado
+  // Los filtros manuales ahora solo alteran el resultado final, no dañan la comparación visual inicial
   const restoredFilterStyle =
     modo === "Original"
       ? {}
@@ -77,21 +77,9 @@ export default function Home() {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <div>
           <p style={{ textAlign: "center", color: "#888" }}>ORIGINAL</p>
-          <div
-            style={{
-              border: "1px dashed #444",
-              minHeight: 260,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              background: "#111",
-              borderRadius: 12,
-              overflow: "hidden",
-            }}
-          >
+          <div style={{ border: "1px dashed #444", minHeight: 260, display: "flex", alignItems: "center", justifyContent: "center", background: "#111", borderRadius: 12, overflow: "hidden" }}>
             {originalUrl ? (
-              // CORRECCIÓN: La imagen original se muestra limpia, sin verse afectada por los sliders de ajuste
-              <img src={originalUrl} alt="Original" style={{ width: "100%", objectFit: "contain" }} />
+              <img src={originalUrl} alt="Original" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
             ) : (
               <span style={{ color: "#555" }}>Selecciona foto</span>
             )}
@@ -99,124 +87,38 @@ export default function Home() {
         </div>
         <div>
           <p style={{ textAlign: "center", color: "#2f6" }}>RESTAURADA</p>
-          <div
-            style={{
-              border: "1px dashed #444",
-              minHeight: 260,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              background: "#111",
-              borderRadius: 12,
-              overflow: "hidden",
-            }}
-          >
+          <div style={{ border: "1px dashed #444", minHeight: 260, display: "flex", alignItems: "center", justifyContent: "center", background: "#111", borderRadius: 12, overflow: "hidden" }}>
             {restoredUrl ? (
-              // CORRECCIÓN: Los filtros de brillo y color se aplican estrictamente a la foto final
-              <img src={restoredUrl} alt="Restaurada" style={{ width: "100%", objectFit: "contain", ...restoredFilterStyle }} />
+              <img src={restoredUrl} alt="Restaurada" style={{ width: "100%", height: "100%", objectFit: "contain", ...restoredFilterStyle }} />
             ) : (
-              <span style={{ color: "#555", textAlign: "center" }}>
-                Aquí aparecerá sin
-                <br />
-                grietas
-              </span>
+              <span style={{ color: "#555", textAlign: "center" }}>Aquí aparecerá sin<br />grietas o manchas</span>
             )}
           </div>
         </div>
       </div>
 
       <div style={{ marginTop: 16, display: "flex", gap: 8, justifyContent: "center" }}>
-        <button
-          onClick={() => setModo("B/N")}
-          style={{
-            padding: "6px 12px",
-            borderRadius: 8,
-            background: modo === "B/N" ? "#fff" : "#222",
-            color: modo === "B/N" ? "#000" : "#fff",
-            border: "none",
-            cursor: "pointer",
-          }}
-        >
-          B/N
-        </button>
-        <button
-          onClick={() => setModo("Color")}
-          style={{
-            padding: "6px 12px",
-            borderRadius: 8,
-            background: modo === "Color" ? "#fff" : "#222",
-            color: modo === "Color" ? "#000" : "#fff",
-            border: "none",
-            cursor: "pointer",
-          }}
-        >
-          Color
-        </button>
-        <button
-          onClick={() => setModo("Original")}
-          style={{
-            padding: "6px 12px",
-            borderRadius: 8,
-            background: modo === "Original" ? "#fff" : "#222",
-            color: modo === "Original" ? "#000" : "#fff",
-            border: "none",
-            cursor: "pointer",
-          }}
-        >
-          Original
-        </button>
+        <button onClick={() => setModo("B/N")} style={{ padding: "6px 12px", borderRadius: 8, background: modo === "B/N" ? "#fff" : "#222", color: modo === "B/N" ? "#000" : "#fff", border: "none", cursor: "pointer" }}>B/N</button>
+        <button onClick={() => setModo("Color")} style={{ padding: "6px 12px", borderRadius: 8, background: modo === "Color" ? "#fff" : "#222", color: modo === "Color" ? "#000" : "#fff", border: "none", cursor: "pointer" }}>Color</button>
+        <button onClick={() => setModo("Original")} style={{ padding: "6px 12px", borderRadius: 8, background: modo === "Original" ? "#fff" : "#222", color: modo === "Original" ? "#000" : "#fff", border: "none", cursor: "pointer" }}>Original</button>
       </div>
 
       <div style={{ marginTop: 12, maxWidth: 400, margin: "12px auto" }}>
-        <label>Ajuste de Brillo Final: {brillo}%</label>
-        <input
-          type="range"
-          min="50"
-          max="150"
-          value={brillo}
-          onChange={(e) => setBrillo(Number(e.target.value))}
-          style={{ width: "100%" }}
-        />
-        <label>Ajuste de Color Final: {color}%</label>
-        <input
-          type="range"
-          min="0"
-          max="200"
-          value={color}
-          onChange={(e) => setColor(Number(e.target.value))}
-          style={{ width: "100%" }}
-        />
+        <label>Ajuste de Brillo Resultado: {brillo}%</label>
+        <input type="range" min="50" max="150" value={brillo} onChange={(e) => setBrillo(Number(e.target.value))} style={{ width: "100%" }} />
+        <label>Ajuste de Color Resultado: {color}%</label>
+        <input type="range" min="0" max="200" value={color} onChange={(e) => setColor(Number(e.target.value))} style={{ width: "100%" }} />
       </div>
 
-      <button
-        onClick={restaurar}
-        disabled={loading}
-        style={{
-          display: "block",
-          margin: "16px auto",
-          background: "#22c55e",
-          color: "#000",
-          fontWeight: "bold",
-          padding: "14px 28px",
-          borderRadius: 999,
-          border: "none",
-          cursor: loading ? "not-allowed" : "pointer",
-        }}
-      >
-        {loading ? "Restaurando con IA..." : "✨ RESTAURAR DAÑOS EXTREMOS"}
+      <button onClick={restaurar} disabled={loading} style={{ display: "block", margin: "16px auto", background: "#22c55e", color: "#000", fontWeight: "bold", padding: "14px 28px", borderRadius: 999, border: "none", cursor: loading ? "not-allowed" : "pointer" }}>
+        {loading ? "Restaurando daños severos..." : "✨ RESTAURAR FOTO DAÑADA"}
       </button>
 
-      {error && (
-        <p style={{ color: "#f55", textAlign: "center", wordBreak: "break-word" }}>Error: {error}</p>
-      )}
+      {error && <p style={{ color: "#f55", textAlign: "center", wordBreak: "break-word" }}>Error: {error}</p>}
       {restoredUrl && (
-        <a href={restoredUrl} download="restaurada.png" style={{ display: "block", textAlign: "center", color: "#2f6", marginTop: 12 }}>
-          Descargar foto restaurada
-        </a>
+        <a href={restoredUrl} download="restaurada.png" style={{ display: "block", textAlign: "center", color: "#2f6", marginTop: 12 }}>Descargar foto restaurada</a>
       )}
-      <p style={{ textAlign: "center", color: "#444", marginTop: 20, fontSize: 12 }}>
-        Motor: Cloudflare Workers AI (tuyo, sin límites de DeepAI)
-      </p>
+      <p style={{ textAlign: "center", color: "#444", marginTop: 20, fontSize: 12 }}>Motor: Cloudflare Workers AI</p>
     </div>
   );
 }
