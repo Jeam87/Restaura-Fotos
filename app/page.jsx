@@ -30,17 +30,22 @@ export default function Home() {
     try {
       const fd = new FormData();
       fd.append("image", file);
-      let prompt =
-        "restore old photo, fill missing torn white part, remove cracks, scratches, creases, photorealistic, high detail, keep faces intact, sharp";
-      if (modo === "B/N") prompt += ", black and white";
-      if (modo === "Color") prompt += ", colorized, vibrant colors";
+      
+      // PROMPT ULTRA PODEROSO: Optimizado para restauraciones extremas, grietas profundas y manchas
+      let prompt = "masterpiece, ultra high quality, hyper-realistic restoration, look like new, " +
+                   "completely repair and fill severely torn white parts, reconstruct missing pieces, " +
+                   "flawlessly remove deep scratches, heavy cracks, dark stains, dust, and water damage, " +
+                   "smooth textures, bring back original details, keep faces fully intact and sharp, clear eyes";
+      
+      if (modo === "B/N") prompt += ", clean black and white photograph, sharp monochrome tone";
+      if (modo === "Color") prompt += ", professionally colorized, vibrant but natural colors, realistic skin tones";
 
       fd.append("prompt", prompt);
 
       const res = await fetch("/api/restore", { method: "POST", body: fd });
       if (!res.ok) {
         const j = await res.json().catch(() => ({ error: "Error servidor" }));
-        throw new Error(j.error || "Error");
+        throw new Error(j.error || "Error en el servidor de restauración");
       }
       const blob = await res.blob();
       setRestoredUrl(URL.createObjectURL(blob));
@@ -51,8 +56,8 @@ export default function Home() {
     }
   }
 
-  // Si el modo es Original no aplicamos filtros (mostramos la imagen tal cual).
-  const filterStyle =
+  // CORRECCIÓN: El estilo de filtro visual de la interfaz ahora solo se calcula para el resultado
+  const restoredFilterStyle =
     modo === "Original"
       ? {}
       : {
@@ -85,7 +90,8 @@ export default function Home() {
             }}
           >
             {originalUrl ? (
-              <img src={originalUrl} alt="Original" style={{ width: "100%", ...filterStyle }} />
+              // CORRECCIÓN: La imagen original se muestra limpia, sin verse afectada por los sliders de ajuste
+              <img src={originalUrl} alt="Original" style={{ width: "100%", objectFit: "contain" }} />
             ) : (
               <span style={{ color: "#555" }}>Selecciona foto</span>
             )}
@@ -106,7 +112,8 @@ export default function Home() {
             }}
           >
             {restoredUrl ? (
-              <img src={restoredUrl} alt="Restaurada" style={{ width: "100%", ...filterStyle }} />
+              // CORRECCIÓN: Los filtros de brillo y color se aplican estrictamente a la foto final
+              <img src={restoredUrl} alt="Restaurada" style={{ width: "100%", objectFit: "contain", ...restoredFilterStyle }} />
             ) : (
               <span style={{ color: "#555", textAlign: "center" }}>
                 Aquí aparecerá sin
@@ -161,7 +168,7 @@ export default function Home() {
       </div>
 
       <div style={{ marginTop: 12, maxWidth: 400, margin: "12px auto" }}>
-        <label>Brillo: {brillo}%</label>
+        <label>Ajuste de Brillo Final: {brillo}%</label>
         <input
           type="range"
           min="50"
@@ -170,7 +177,7 @@ export default function Home() {
           onChange={(e) => setBrillo(Number(e.target.value))}
           style={{ width: "100%" }}
         />
-        <label>Color: {color}%</label>
+        <label>Ajuste de Color Final: {color}%</label>
         <input
           type="range"
           min="0"
@@ -196,7 +203,7 @@ export default function Home() {
           cursor: loading ? "not-allowed" : "pointer",
         }}
       >
-        {loading ? "Restaurando..." : "✨ RESTAURAR Y RELLENAR"}
+        {loading ? "Restaurando con IA..." : "✨ RESTAURAR DAÑOS EXTREMOS"}
       </button>
 
       {error && (
