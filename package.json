@@ -1,1 +1,5 @@
-bun add @opennextjs/cloudflare
+{
+  "dependencies": {
+    "@opennextjs/cloudflare": "^1.0.0"
+  }
+}
