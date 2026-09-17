@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
 export const runtime = "nodejs";
 export async function POST(req: Request) {
-  return NextResponse.json({ ok: true });
+  try {
+    const body = await req.json();
+    return NextResponse.json({ ok: true, body });
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message }, { status: 500 });
+  }
 }
